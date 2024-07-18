@@ -1,4 +1,5 @@
 mod novel;
+mod search;
 mod user;
 mod volumes;
 
@@ -6,24 +7,15 @@ use reqwest::{IntoUrl, RequestBuilder};
 use serde::Deserialize;
 
 use crate::utils;
-pub use novel::*;
-pub use user::*;
-pub use volumes::*;
+pub use novel::{NovelInfo, NovelInfoAuthor};
+pub use user::UserInfo;
+pub use volumes::{ChapterInfo, VolumeInfo, VolumesInfo};
 
 pub struct SfClient {
   http: reqwest::Client,
 }
 
 impl SfClient {
-  pub fn new() -> Self {
-    Self {
-      http: reqwest::ClientBuilder::new()
-        .cookie_store(true)
-        .build()
-        .unwrap(),
-    }
-  }
-
   fn get(&self, url: impl IntoUrl) -> RequestBuilder {
     self
       .http
@@ -52,6 +44,17 @@ impl SfClient {
           utils::device_token()
         ),
       )
+  }
+}
+
+impl Default for SfClient {
+  fn default() -> Self {
+    Self {
+      http: reqwest::ClientBuilder::new()
+        .cookie_store(true)
+        .build()
+        .unwrap(),
+    }
   }
 }
 

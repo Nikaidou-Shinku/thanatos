@@ -11,7 +11,7 @@ pub async fn chapters(
   State(client): State<Arc<SfClient>>,
 ) -> Json<Vec<ChapterInfo>> {
   let volumes = client.volumes_info(novel_id).await.unwrap();
-  let res = volumes.list.into_iter().map(|v| v.list).flatten().collect();
+  let res = volumes.list.into_iter().flat_map(|v| v.list).collect();
 
   Json(res)
 }

@@ -9,10 +9,11 @@ use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  let client = SfClient::new();
+  let client = SfClient::default();
   let app = Router::new()
     .route("/novels/:id", get(routers::novel))
     .route("/novels/:id/chapters", get(routers::chapters))
+    .route("/search", get(routers::search))
     .with_state(Arc::new(client));
   let listener = TcpListener::bind("0.0.0.0:9961").await?;
 
