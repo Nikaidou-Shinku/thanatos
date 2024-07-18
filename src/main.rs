@@ -11,6 +11,7 @@ use tokio::net::TcpListener;
 async fn main() -> Result<()> {
   let client = SfClient::default();
   let app = Router::new()
+    .route("/version", get(routers::version))
     .route("/novels/:id", get(routers::novel))
     .route("/novels/:id/chapters", get(routers::chapters))
     .route("/search", get(routers::search))
