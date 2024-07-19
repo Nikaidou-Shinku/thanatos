@@ -1,8 +1,11 @@
-use std::{process::Command, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+  process::Command,
+  time::{SystemTime, UNIX_EPOCH},
+};
 
 fn main() {
   let output = Command::new("git")
-    .args(&["rev-parse", "HEAD"])
+    .args(["rev-parse", "HEAD"])
     .output()
     .expect("failed to get the git commit hash");
   let hash = String::from_utf8(output.stdout).expect("failed to parse `git rev-parse HEAD`");

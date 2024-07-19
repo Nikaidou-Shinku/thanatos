@@ -16,6 +16,7 @@ pub struct UserInfo {
 }
 
 impl SfClient {
+  #[tracing::instrument(skip_all, fields(username = username.as_ref()))]
   pub async fn login(&self, username: impl AsRef<str>, password: impl AsRef<str>) -> Result<()> {
     #[derive(Serialize)]
     struct LoginPayload<'a> {
@@ -28,6 +29,8 @@ impl SfClient {
       password: password.as_ref(),
     };
 
+    tracing::info!("Requesting...");
+
     let resp = self
       .post("https://api.sfacg.com/sessions")
       .json(&payload)
@@ -36,12 +39,16 @@ impl SfClient {
 
     if !resp.status().is_success() {
       let res: SfResp<()> = resp.json().await?;
+      tracing::warn!(message = res.status.msg, "Failed");
       bail!("Login failed: {:?}", res.status.msg);
     }
+
+    tracing::info!("Ok");
 
     Ok(())
   }
 
+  #[tracing::instrument(skip(self))]
   pub async fn user_info(&self) -> Result<UserInfo> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -73,6 +80,8 @@ impl SfClient {
       }
     }
 
+    tracing::info!("Requesting...");
+
     let res: SfResp<SfRespUserInfo> = self
       .get("https://api.sfacg.com/user")
       .send()
@@ -81,8 +90,11 @@ impl SfClient {
       .await?;
 
     let Some(data) = res.data else {
+      tracing::warn!(message = res.status.msg, "Failed");
       bail!("Get user info failed: {:?}", res.status.msg);
     };
+
+    tracing::info!("Ok");
 
     Ok(data.into())
   }

@@ -1,6 +1,8 @@
 use axum::Json;
 use serde::Serialize;
 
+use crate::{BUILD_TIME, GIT_HASH, VERSION};
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VersionResp {
@@ -9,10 +11,9 @@ pub struct VersionResp {
   build_time: u128,
 }
 
+#[tracing::instrument]
 pub async fn version() -> Json<VersionResp> {
-  const VERSION: &str = env!("CARGO_PKG_VERSION");
-  const GIT_HASH: &str = env!("GIT_HASH");
-  const BUILD_TIME: &str = env!("BUILD_TIME");
+  tracing::info!("GET /version");
 
   Json(VersionResp {
     version: VERSION,

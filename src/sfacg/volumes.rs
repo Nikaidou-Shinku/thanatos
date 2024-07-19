@@ -25,6 +25,7 @@ pub struct VolumesInfo {
 }
 
 impl SfClient {
+  #[tracing::instrument(skip(self))]
   pub async fn volumes_info(&self, novel_id: i32) -> Result<VolumesInfo> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -99,6 +100,8 @@ impl SfClient {
       }
     }
 
+    tracing::info!("Requesting...");
+
     let res: SfResp<SfRespVolumesInfo> = self
       .get(format!("https://api.sfacg.com/novels/{novel_id}/dirs"))
       .send()
@@ -107,8 +110,11 @@ impl SfClient {
       .await?;
 
     let Some(data) = res.data else {
+      tracing::warn!(message = res.status.msg, "Failed");
       bail!("Get volumes info failed: {:?}", res.status.msg);
     };
+
+    tracing::info!("Ok");
 
     Ok(data.into())
   }

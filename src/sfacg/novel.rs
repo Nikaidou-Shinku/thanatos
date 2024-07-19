@@ -60,7 +60,10 @@ impl From<SfRespNovelInfo> for NovelInfo {
 }
 
 impl SfClient {
+  #[tracing::instrument(skip(self))]
   pub async fn novel_info(&self, novel_id: i32) -> Result<NovelInfo> {
+    tracing::info!("Requesting...");
+
     let res: SfResp<SfRespNovelInfo> = self
       .get(format!("https://api.sfacg.com/novels/{novel_id}"))
       .send()
@@ -69,8 +72,11 @@ impl SfClient {
       .await?;
 
     let Some(data) = res.data else {
+      tracing::warn!(message = res.status.msg, "Failed");
       bail!("Get novel info failed: {:?}", res.status.msg);
     };
+
+    tracing::info!("Ok");
 
     Ok(data.into())
   }

@@ -12,11 +12,26 @@ pub struct SearchParams {
   keyword: String,
 }
 
+#[tracing::instrument(skip_all, fields(keyword = params.keyword))]
 pub async fn search(
   Query(params): Query<SearchParams>,
   State(client): State<Arc<SfClient>>,
 ) -> Json<Vec<NovelInfo>> {
-  let novels = client.search(params.keyword).await.unwrap();
+  tracing::info!("GET /search");
+
+  let novels = match client.search(params.keyword).await {
+    Ok(res) => res,
+    Err(error) => {
+      tracing::warn!(%error, "Failed");
+      return Json(Vec::new());
+    }
+  };
+
+  tracing::info!(
+    count = novels.len(),
+    first = novels.first().map(|n| &n.title),
+    "Ok",
+  );
 
   Json(novels)
 }
