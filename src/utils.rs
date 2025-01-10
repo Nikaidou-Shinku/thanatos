@@ -17,11 +17,13 @@ pub fn device_token() -> String {
 pub fn sf_security() -> String {
   let nonce = Uuid::new_v4();
 
-  // NOTE: `SystemTime::now()` is always later than `UNIX_EPOCH`.
-  let timestamp = SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .as_millis();
+  // SAFETY: `SystemTime::now()` is always later than `UNIX_EPOCH`.
+  let timestamp = unsafe {
+    SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap_unchecked()
+      .as_millis()
+  };
 
   let device_token = device_token();
 

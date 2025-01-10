@@ -1,7 +1,7 @@
-use eyre::{bail, Result};
+use eyre::{Result, bail};
 use serde::Deserialize;
 
-use super::{novel::SfRespNovelInfo, NovelInfo, SfClient, SfResp};
+use super::{NovelInfo, SfClient, SfResp, novel::SfRespNovelInfo};
 
 impl SfClient {
   #[tracing::instrument(skip_all, fields(keyword = keyword.as_ref()))]

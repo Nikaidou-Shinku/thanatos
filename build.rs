@@ -13,10 +13,13 @@ fn main() {
   println!("cargo:rustc-env=GIT_HASH={hash}");
   println!("cargo:rerun-if-changed=.git/HEAD");
 
-  let timestamp = SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .as_millis();
+  // SAFETY: `SystemTime::now()` is always later than `UNIX_EPOCH`.
+  let timestamp = unsafe {
+    SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap_unchecked()
+      .as_millis()
+  };
 
   println!("cargo:rustc-env=BUILD_TIME={timestamp}");
 }

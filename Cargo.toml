@@ -2,7 +2,7 @@
 name = "thanatos"
 version = "0.1.2"
 authors = ["yurzhang <yurzhang.oi@gmail.com>"]
-edition = "2021"
+edition = "2024"
 
 [profile.release]
 strip = true
@@ -12,22 +12,22 @@ panic = "abort"
 
 [dependencies]
 eyre = "0.6.12"
-serde = { version = "1.0.213", features = ["derive"] }
-uuid = { version = "1.11.0", features = ["v4", "fast-rng"] }
+serde = { version = "1.0.217", features = ["derive"] }
+uuid = { version = "1.11.1", features = ["v4", "fast-rng"] }
 data-encoding = "2.6.0"
 md-5 = "0.10.6"
-tokio = { version = "1.41.0", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros"] }
 
 # Logging
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
 
 [dependencies.reqwest]
-version = "0.12.8"
+version = "0.12.12"
 default-features = false
 features = ["http2", "rustls-tls-webpki-roots", "cookies", "json"]
 
 [dependencies.axum]
-version = "0.7.7"
+version = "0.8.1"
 default-features = false
 features = ["http1", "json", "tokio", "query"]
