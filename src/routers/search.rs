@@ -15,14 +15,16 @@ pub struct SearchParams {
   keyword: String,
 }
 
-#[tracing::instrument(skip_all, fields(keyword = params.keyword))]
+#[tracing::instrument(skip_all, fields(keyword = params.keyword, platform))]
 pub async fn search<C: Dispatch + Client + 'static>(
   Query(params): Query<SearchParams>,
   State(clients): State<Arc<Clients>>,
 ) -> Json<Vec<NovelInfoResp>> {
-  tracing::info!("GET /search");
-
   let client = <C as Dispatch>::dispatch(clients.as_ref());
+
+  tracing::Span::current().record("platform", client.platform());
+
+  tracing::info!("GET /search");
 
   let novels = match client
     .search_infos(

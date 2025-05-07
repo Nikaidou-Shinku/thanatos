@@ -16,6 +16,7 @@ pub use constants::*;
 
 trait Dispatch {
   fn dispatch(clients: &Clients) -> &Self;
+  fn platform(&self) -> &'static str;
 }
 
 struct Clients {
@@ -27,12 +28,14 @@ impl Clients {
   async fn new() -> Result<Self> {
     let ciweimao = CiweimaoClient::new().await?;
 
-    ciweimao
-      .log_in(
-        dotenv!("CIWEIMAO_USERNAME").to_owned(),
-        Some(dotenv!("CIWEIMAO_PASSWORD").to_owned()),
-      )
-      .await?;
+    if !ciweimao.logged_in().await? {
+      ciweimao
+        .log_in(
+          dotenv!("CIWEIMAO_USERNAME").to_owned(),
+          Some(dotenv!("CIWEIMAO_PASSWORD").to_owned()),
+        )
+        .await?;
+    }
 
     Ok(Self {
       sfacg: SfacgClient::new().await?,
@@ -45,11 +48,19 @@ impl Dispatch for SfacgClient {
   fn dispatch(clients: &Clients) -> &Self {
     &clients.sfacg
   }
+
+  fn platform(&self) -> &'static str {
+    "SFACG"
+  }
 }
 
 impl Dispatch for CiweimaoClient {
   fn dispatch(clients: &Clients) -> &Self {
     &clients.ciweimao
+  }
+
+  fn platform(&self) -> &'static str {
+    "CIWEIMAO"
   }
 }
 

@@ -9,14 +9,16 @@ use novel_api::Client;
 use super::NovelInfoResp;
 use crate::{Clients, Dispatch};
 
-#[tracing::instrument(skip(clients))]
+#[tracing::instrument(skip(clients), fields(platform))]
 pub async fn novel<C: Dispatch + Client>(
   Path(novel_id): Path<u32>,
   State(clients): State<Arc<Clients>>,
 ) -> Json<Option<NovelInfoResp>> {
-  tracing::info!("GET /novels/{novel_id}");
-
   let client = <C as Dispatch>::dispatch(clients.as_ref());
+
+  tracing::Span::current().record("platform", client.platform());
+
+  tracing::info!("GET /novels/{novel_id}");
 
   let novel = match client.novel_info(novel_id).await {
     Ok(Some(res)) => res,

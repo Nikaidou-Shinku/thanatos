@@ -32,14 +32,16 @@ impl From<ChapterInfo> for ChapterInfoResp {
   }
 }
 
-#[tracing::instrument(skip(clients))]
+#[tracing::instrument(skip(clients), fields(platform))]
 pub async fn chapters<C: Dispatch + Client>(
   Path(novel_id): Path<u32>,
   State(clients): State<Arc<Clients>>,
 ) -> Json<Vec<ChapterInfoResp>> {
-  tracing::info!("GET /novels/{novel_id}/chapters");
-
   let client = <C as Dispatch>::dispatch(clients.as_ref());
+
+  tracing::Span::current().record("platform", client.platform());
+
+  tracing::info!("GET /novels/{novel_id}/chapters");
 
   let volumes = match client.volume_infos(novel_id).await {
     Ok(Some(res)) => res,
