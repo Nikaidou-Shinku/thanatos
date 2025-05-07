@@ -4,8 +4,10 @@ use axum::{
   Json,
   extract::{Path, State},
 };
-use novel_api::{ChapterInfo, Client, SfacgClient};
+use novel_api::{ChapterInfo, Client};
 use serde::Serialize;
+
+use crate::{Clients, Dispatch};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,12 +32,14 @@ impl From<ChapterInfo> for ChapterInfoResp {
   }
 }
 
-#[tracing::instrument(skip(client))]
-pub async fn chapters(
+#[tracing::instrument(skip(clients))]
+pub async fn chapters<C: Dispatch + Client>(
   Path(novel_id): Path<u32>,
-  State(client): State<Arc<SfacgClient>>,
+  State(clients): State<Arc<Clients>>,
 ) -> Json<Vec<ChapterInfoResp>> {
   tracing::info!("GET /novels/{novel_id}/chapters");
+
+  let client = <C as Dispatch>::dispatch(clients.as_ref());
 
   let volumes = match client.volume_infos(novel_id).await {
     Ok(Some(res)) => res,

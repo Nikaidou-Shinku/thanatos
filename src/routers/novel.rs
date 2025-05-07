@@ -4,16 +4,19 @@ use axum::{
   Json,
   extract::{Path, State},
 };
-use novel_api::{Client, SfacgClient};
+use novel_api::Client;
 
 use super::NovelInfoResp;
+use crate::{Clients, Dispatch};
 
-#[tracing::instrument(skip(client))]
-pub async fn novel(
+#[tracing::instrument(skip(clients))]
+pub async fn novel<C: Dispatch + Client>(
   Path(novel_id): Path<u32>,
-  State(client): State<Arc<SfacgClient>>,
+  State(clients): State<Arc<Clients>>,
 ) -> Json<Option<NovelInfoResp>> {
   tracing::info!("GET /novels/{novel_id}");
+
+  let client = <C as Dispatch>::dispatch(clients.as_ref());
 
   let novel = match client.novel_info(novel_id).await {
     Ok(Some(res)) => res,

@@ -4,10 +4,11 @@ use axum::{
   Json,
   extract::{Path, Query, State},
 };
-use novel_api::{Client, Options, SfacgClient};
+use novel_api::{Client, Options};
 use serde::Deserialize;
 
 use super::NovelInfoResp;
+use crate::{Clients, Dispatch};
 
 #[derive(Deserialize)]
 pub struct SearchParams {
@@ -15,11 +16,13 @@ pub struct SearchParams {
 }
 
 #[tracing::instrument(skip_all, fields(keyword = params.keyword))]
-pub async fn search(
+pub async fn search<C: Dispatch + Client + 'static>(
   Query(params): Query<SearchParams>,
-  State(client): State<Arc<SfacgClient>>,
+  State(clients): State<Arc<Clients>>,
 ) -> Json<Vec<NovelInfoResp>> {
   tracing::info!("GET /search");
+
+  let client = <C as Dispatch>::dispatch(clients.as_ref());
 
   let novels = match client
     .search_infos(
@@ -51,7 +54,7 @@ pub async fn search(
     .map(|id| {
       (
         id,
-        tokio::spawn(super::novel(Path(id), State(client.clone()))),
+        tokio::spawn(super::novel::novel::<C>(Path(id), State(clients.clone()))),
       )
     })
     .collect();

@@ -3,13 +3,14 @@ mod novel;
 mod search;
 mod version;
 
-use novel_api::NovelInfo;
+use std::sync::Arc;
+
+use axum::{Router, routing::get};
+use novel_api::{Client, NovelInfo};
 use serde::Serialize;
 
-pub use chapter::*;
-pub use novel::*;
-pub use search::*;
-pub use version::*;
+use crate::{Clients, Dispatch};
+pub use version::version;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,4 +35,11 @@ impl From<NovelInfo> for NovelInfoResp {
       is_finish: value.is_finished.unwrap_or_default(),
     }
   }
+}
+
+pub fn routes<C: Dispatch + Client + 'static>() -> Router<Arc<Clients>> {
+  Router::new()
+    .route("/novels/{id}", get(novel::novel::<C>))
+    .route("/novels/{id}/chapters", get(chapter::chapters::<C>))
+    .route("/search", get(search::search::<C>))
 }
