@@ -3,9 +3,9 @@ mod routers;
 
 use std::{net::SocketAddr, sync::Arc};
 
+use anyhow::Result;
 use axum::{Router, routing::get};
-use eyre::Result;
-use thanatos::sfacg::SfClient;
+use novel_api::SfacgClient;
 use tokio::net::TcpListener;
 
 use tracing::Level;
@@ -24,18 +24,20 @@ async fn main() -> Result<()> {
 
   tracing::info!(VERSION, GIT_HASH, BUILD_TIME, "Starting Thanatos...");
 
-  let client = SfClient::default();
+  let client = SfacgClient::new().await.unwrap();
   let app = Router::new()
     .route("/version", get(routers::version))
     .route("/novels/{id}", get(routers::novel))
     .route("/novels/{id}/chapters", get(routers::chapters))
     .route("/search", get(routers::search))
     .with_state(Arc::new(client));
+
   let addr: SocketAddr = "0.0.0.0:9961".parse().unwrap();
   let listener = TcpListener::bind(addr).await?;
 
   tracing::info!(%addr, "Listening...");
 
   axum::serve(listener, app).await?;
+
   Ok(())
 }

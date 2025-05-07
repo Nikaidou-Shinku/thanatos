@@ -4,24 +4,56 @@ use axum::{
   Json,
   extract::{Path, State},
 };
-use thanatos::sfacg::{ChapterInfo, SfClient};
+use novel_api::{ChapterInfo, Client, SfacgClient};
+use serde::Serialize;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChapterInfoResp {
+  id: u32,
+  title: String,
+  char_count: u32,
+  create_time: String,
+  update_time: Option<String>,
+}
+
+impl From<ChapterInfo> for ChapterInfoResp {
+  fn from(value: ChapterInfo) -> Self {
+    Self {
+      id: value.id,
+      title: value.title,
+      char_count: value.word_count.unwrap_or_default(),
+      // TODO: fallback when `create_time` is None
+      create_time: value.create_time.unwrap_or_default().to_string(),
+      update_time: value.update_time.map(|x| x.to_string()),
+    }
+  }
+}
 
 #[tracing::instrument(skip(client))]
 pub async fn chapters(
-  Path(novel_id): Path<i32>,
-  State(client): State<Arc<SfClient>>,
-) -> Json<Vec<ChapterInfo>> {
+  Path(novel_id): Path<u32>,
+  State(client): State<Arc<SfacgClient>>,
+) -> Json<Vec<ChapterInfoResp>> {
   tracing::info!("GET /novels/{novel_id}/chapters");
 
-  let volumes = match client.volumes_info(novel_id).await {
-    Ok(res) => res,
+  let volumes = match client.volume_infos(novel_id).await {
+    Ok(Some(res)) => res,
+    Ok(None) => {
+      tracing::info!("Not found");
+      return Json(Vec::new());
+    }
     Err(error) => {
       tracing::warn!(%error, "Failed");
       return Json(Vec::new());
     }
   };
 
-  let res: Vec<_> = volumes.list.into_iter().flat_map(|v| v.list).collect();
+  let res: Vec<_> = volumes
+    .into_iter()
+    .flat_map(|v| v.chapter_infos)
+    .map(Into::into)
+    .collect();
 
   tracing::info!(count = res.len(), "Ok");
 
